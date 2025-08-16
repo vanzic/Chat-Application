@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat - Connect & Communicate</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div id="network-status" class="network-status hidden">
+        <div class="network-message">
+            <span class="network-icon">📡</span>
+            <span>Connection lost. Reconnecting...</span>
+        </div>
+    </div>
+
+    <div id="auth-container" class="auth-container">
+        <div id="landing-page" class="auth-page">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Modern Chat</h1>
+                    <p>Connect with friends through secure messaging with unique nicknames</p>
+                </div>
+                <div class="auth-actions">
+                    <button class="btn btn--primary btn--lg" id="landing-login-btn">
+                        <span class="btn-text">Login</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                    <button class="btn btn--outline btn--lg" id="landing-signup-btn">
+                        <span class="btn-text">Sign Up</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="login-page" class="auth-page hidden">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to continue your conversations</p>
+                </div>
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label" for="login-email">Email</label>
+                        <input type="email" id="login-email" class="form-control" required autocomplete="email">
+                        <div class="input-icon">📧</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" required
+                            autocomplete="current-password">
+                        <div class="input-icon">🔒</div>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">
+                        <span class="btn-text">Sign In</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" id="signup-link">Sign up here</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="signup-page" class="auth-page hidden">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Join Modern Chat</h2>
+                    <p>Create your account with a unique nickname</p>
+                </div>
+                <form id="signup-form" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label" for="signup-nickname">Nickname *</label>
+                        <input type="text" id="signup-nickname" class="form-control" required minlength="3"
+                            maxlength="20" autocomplete="username" placeholder="@username">
+                        <div class="input-icon">👤</div>
+                        <div class="form-hint">3-20 characters. Letters, numbers, and underscores only. This will be
+                            your unique @username.</div>
+                        <div id="nickname-availability" class="nickname-status hidden"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="signup-email">Email</label>
+                        <input type="email" id="signup-email" class="form-control" required autocomplete="email">
+                        <div class="input-icon">📧</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="signup-password">Password</label>
+                        <input type="password" id="signup-password" class="form-control" required minlength="6"
+                            autocomplete="new-password">
+                        <div class="input-icon">🔒</div>
+                        <div id="password-strength" class="password-strength"></div>
+                    </div>
+                    <button type="submit" class="btn btn--primary btn--full-width">
+                        <span class="btn-text">Create Account</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" id="login-link">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-container" class="chat-container hidden">
+        <header class="chat-header">
+            <div class="header-content">
+                <h1>Modern Chat</h1>
+                <div class="header-actions">
+                    <div class="connection-status" id="connection-status">
+                        <span class="status-indicator online"></span>
+                        <span class="status-text">Connected</span>
+                    </div>
+                    <span id="current-user-name" class="current-user"></span>
+                    <button class="btn btn--outline btn--sm" id="logout-btn">
+                        <span class="btn-text">Logout</span>
+                        <span class="btn-spinner hidden">⟳</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="chat-main">
+            <aside class="friends-panel">
+                <div class="friend-search-section">
+                    <div class="search-header">
+                        <h3>Add Friends</h3>
+                    </div>
+                    <div class="search-input-wrapper">
+                        <input type="text" id="friend-search" class="form-control search-input"
+                            placeholder="Search by @nickname..." autocomplete="off">
+                        <div class="search-icon">🔍</div>
+                    </div>
+                    <div id="search-results" class="search-results hidden"></div>
+                </div>
+
+                <div class="friend-requests-section">
+                    <div class="section-header">
+                        <h4>Friend Requests</h4>
+                        <span id="requests-count" class="count-badge hidden">0</span>
+                    </div>
+                    <div id="friend-requests" class="friend-requests-list"></div>
+                </div>
+
+                <div class="friends-list-section">
+                    <div class="section-header">
+                        <h4>Friends</h4>
+                        <span id="friends-count" class="count-badge hidden">0</span>
+                        <button class="btn btn--sm btn--outline refresh-friends" id="refresh-friends-btn"
+                            title="Refresh friends">
+                            <span class="refresh-icon">↻</span>
+                        </button>
+                    </div>
+                    <div class="friends-list" id="friends-list">
+                        <div class="loading-state">
+                            <div class="loading-spinner-sm"></div>
+                            <span>Loading friends...</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="chat-panel">
+                <div id="welcome-state" class="welcome-state">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">💬</div>
+                        <h3>Welcome to Modern Chat</h3>
+                        <p>Search for friends by their @nickname and start messaging securely</p>
+                        <div class="welcome-stats">
+                            <div class="stat">
+                                <span class="stat-number" id="total-friends">0</span>
+                                <span class="stat-label">Friends</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" id="pending-requests">0</span>
+                                <span class="stat-label">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="chat-window" class="chat-window hidden">
+                    <div class="chat-window-header">
+                        <div class="chat-recipient">
+                            <button class="btn btn--sm btn--ghost mobile-back" id="mobile-back-btn">←</button>
+                            <div class="recipient-avatar"></div>
+                            <div class="recipient-info">
+                                <h4 id="recipient-name"></h4>
+                                <span class="recipient-nickname" id="recipient-nickname"></span>
+                                <span class="recipient-status">
+                                    <span class="status-dot"></span>
+                                    Friend
+                                </span>
+                            </div>
+                        </div>
+                        <div class="chat-actions">
+                            <button class="btn btn--sm btn--ghost" id="refresh-messages-btn" title="Refresh messages">
+                                <span class="refresh-icon">↻</span>
+                            </button>
+                            <button class="btn btn--sm btn--ghost" id="friend-options-btn" title="Friend options">
+                                ⋮
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="friend-options-menu" class="friend-options-menu hidden">
+                        <button class="option-item" id="remove-friend-btn">
+                            <span class="option-icon">🚫</span>
+                            Remove Friend
+                        </button>
+                        <button class="option-item" id="block-friend-btn">
+                            <span class="option-icon">🚫</span>
+                            Block User
+                        </button>
+                    </div>
+
+                    <div id="chat-connection-status" class="chat-connection-status hidden">
+                        <div class="connection-message">
+                            <span class="connection-icon">⚠️</span>
+                            <span>Connection lost. Reconnecting...</span>
+                            <div class="connection-spinner"></div>
+                        </div>
+                    </div>
+
+                    <div class="messages-area" id="messages-area">
+                        <div class="messages-loading">
+                            <div class="loading-spinner-sm"></div>
+                            <span>Loading messages...</span>
+                        </div>
+                    </div>
+
+                    <div class="message-input-area">
+                        <form id="message-form" class="message-form">
+                            <input type="text" id="message-input" class="message-input"
+                                placeholder="Type your message..." required maxlength="1000" autocomplete="off">
+                            <button type="submit" class="btn btn--primary message-send-btn" title="Send message">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="m5 12 7-7 7 7" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" transform="rotate(90 12 12)" />
+                                </svg>
+                            </button>
+                        </form>
+                        <div class="character-count">
+                            <span id="char-count">0</span>/1000
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Processing...</div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="confirmation-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="modal-cancel">Cancel</button>
+                <button class="btn btn--primary" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="error-boundary" class="error-boundary hidden">
+        <div class="error-content">
+            <div class="error-icon">⚠️</div>
+            <h3>Something went wrong</h3>
+            <p>An unexpected error occurred. Please refresh the page or try again later.</p>
+            <div class="error-actions">
+                <button class="btn btn--primary" onclick="window.location.reload()">Refresh Page</button>
+                <button class="btn btn--outline" id="dismiss-error">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+    <script>
+        // Global error handler
+        window.addEventListener('error', function (e) {
+            console.error('Global error:', e);
+            showErrorBoundary();
+        });
+
+        window.addEventListener('unhandledrejection', function (e) {
+            console.error('Unhandled promise rejection:', e);
+            showErrorBoundary();
+        });
+
+        function showErrorBoundary() {
+            document.getElementById('error-boundary').classList.remove('hidden');
+        }
+
+        function hideErrorBoundary() {
+            document.getElementById('error-boundary').classList.add('hidden');
+        }
+
+        // Character counter for message input
+        document.addEventListener('DOMContentLoaded', function () {
+            const messageInput = document.getElementById('message-input');
+            const charCount = document.getElementById('char-count');
+
+            if (messageInput && charCount) {
+                messageInput.addEventListener('input', function () {
+                    const count = this.value.length;
+                    charCount.textContent = count;
+
+                    // Warning when approaching limit
+                    if (count > 900) {
+                        charCount.classList.add('warning');
+                    } else {
+                        charCount.classList.remove('warning');
+                    }
+                });
+            }
+        });
+
+        // Dismiss error boundary
+        document.getElementById('dismiss-error').addEventListener('click', hideErrorBoundary);
+    </script>
+</body>
+
+</html>
