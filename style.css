@@ -150,6 +150,9 @@
   --container-md: 768px;
   --container-lg: 1024px;
   --container-xl: 1280px;
+
+  /* ADDED: Header height variable */
+  --header-height: 65px;
 }
 
 /* Dark mode colors */
@@ -335,6 +338,8 @@ html {
 body {
   margin: 0;
   padding: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 *,
@@ -1029,16 +1034,21 @@ body {
 .chat-header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: var(--space-16) var(--space-24);
+  padding: 0 var(--space-24);
+  height: var(--header-height);
   box-shadow: var(--shadow-sm);
   z-index: 10;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -1084,10 +1094,12 @@ body {
 .chat-main {
   flex: 1;
   display: flex;
-  height: calc(100vh - 80px);
-  max-width: 1200px;
+  height: calc(100vh - var(--header-height));
+  max-width: 1600px;
   margin: 0 auto;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Enhanced Friends Panel */
@@ -1097,7 +1109,7 @@ body {
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  /* overflow: hidden; <--- THIS WAS THE BUG, IT IS NOW REMOVED */
+  flex-shrink: 0;
 }
 
 /* Friend Search Section */
@@ -1105,7 +1117,6 @@ body {
   padding: var(--space-16);
   border-bottom: 1px solid var(--color-border);
   position: relative;
-  /* Changed from wrapper to section for better positioning context */
 }
 
 .search-header h3 {
@@ -1541,11 +1552,12 @@ body {
 .chat-window-header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: var(--space-16) var(--space-24);
+  padding: var(--space-12) var(--space-24);
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .chat-recipient {
@@ -1751,9 +1763,8 @@ body {
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   padding: var(--space-16) var(--space-24);
-  position: sticky;
-  bottom: 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
 .message-form {
@@ -1795,6 +1806,7 @@ body {
   justify-content: center;
   padding: 0;
   transition: all var(--duration-fast) var(--ease-standard);
+  flex-shrink: 0;
 }
 
 .message-send-btn:disabled {
@@ -2082,23 +2094,36 @@ body {
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .chat-main {
-    flex-direction: column;
-  }
+/* ======================================= */
+/* ====== RESPONSIVE DESIGN STYLES ====== */
+/* ======================================= */
 
+/* Medium devices (tablets, less than 1024px) */
+@media (max-width: 1024px) {
   .friends-panel {
-    width: 100%;
-    max-height: 40vh;
+    width: 280px; /* Slim down the friends panel on smaller desktops/tablets */
   }
+}
 
-  .chat-panel {
-    min-height: 60vh;
+/* Small devices (landscape phones, tablets, less than 768px) */
+@media (max-width: 768px) {
+  
+  /* FIXED: New, more stable mobile layout system */
+  .chat-main {
+      width: 200%; /* Container is twice the screen width */
+      display: flex;
+      transition: transform 0.3s ease-in-out;
   }
-
-  .mobile-back {
-    display: block !important;
+  .friends-panel, .chat-panel {
+      width: 50%; /* Each panel takes up half the container, i.e., 100% of the screen */
+      border-right: none;
+      height: 100%;
+  }
+  .chat-main.mobile-chat-active {
+      transform: translateX(-50%); /* Slide the container to show the second panel */
+  }
+  .mobile-chat-active .mobile-back {
+    display: block;
   }
 
   .message-bubble {
@@ -2115,6 +2140,7 @@ body {
 
   .chat-header {
     padding: var(--space-12) var(--space-16);
+    --header-height: 56px;
   }
 
   .header-content h1 {
@@ -2125,7 +2151,7 @@ body {
     gap: var(--space-8);
   }
 
-  .connection-status {
+  .connection-status, .current-user {
     display: none;
   }
 
@@ -2160,25 +2186,28 @@ body {
     right: var(--space-12);
     left: var(--space-12);
     max-width: none;
-  }
-
-  .error-content {
-    margin: var(--space-16);
-    padding: var(--space-24);
-  }
-
-  .error-actions {
-    flex-direction: column;
-  }
-
-  .modal-content {
-    margin: var(--space-16);
+    width: auto;
   }
 }
 
+/* Extra small devices (phones, less than 480px) */
 @media (max-width: 480px) {
   .auth-card {
     padding: var(--space-16);
+  }
+  
+  .header-content h1 {
+    font-size: var(--font-size-lg);
+  }
+
+  .recipient-info h4 {
+    font-size: var(--font-size-base);
+  }
+
+  .recipient-avatar {
+    width: 36px;
+    height: 36px;
+    margin-right: var(--space-12);
   }
 
   .welcome-content {
@@ -2198,7 +2227,7 @@ body {
   }
 
   .character-count {
-    right: var(--space-12);
+    display: none; /* Hide character count on very small screens to save space */
   }
 
   .search-results {
@@ -2232,10 +2261,11 @@ body {
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 
   .loading-spinner,
